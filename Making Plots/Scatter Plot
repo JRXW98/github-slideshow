@@ -19,7 +19,15 @@ def label_point(x, y, val, ax):
     for i, point in a.iterrows():
         ax.text(point['x']+.05, point['y'], str(point['val']))
 
+x=df['Pass Length']
+y=df['Successful Pass Length']
+z=[x,y]
 
+for z in range(len(df['Team'])):
+        if df['Team'][z]== 'AFC Wimbledon':
+            ax.scatter(x=df['Pass Length'][z],y=df['Successful Pass Length'][z],s=200,c='green',zorder=2)
+			
+			
 label_point(df['Pass Length'], df['Successful Pass Length'], df['Name'], plt.gca()) 
 
 plt.show()
