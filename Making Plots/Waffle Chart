@@ -1,28 +1,16 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mlp
 from pywaffle import Waffle
 
 
-# In[30]:
-
-
 df = pd.read_csv('/Users/new/Desktop/josef yarney 2.csv')
-
-
 my_list = df.columns.values.tolist()
 df = pd.DataFrame(df,columns=my_list)
-
 df.head(8)
 
 
-# In[34]:
+
 
 
 fig = plt.figure(
@@ -40,10 +28,3 @@ fig.set_facecolor('white')
 
 
 plt.show()
-
-
-# In[ ]:
-
-
-
-
