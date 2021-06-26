@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[81]:
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import seaborn as sns
+import matplotlib.patches as mpatches
+
+
+# In[95]:
+
+
+df = pd.read_csv('/Users/new/Desktop/josef yarney.csv')
+
+
+# In[96]:
+
+
+df.head()
+
+
+# In[97]:
+
+
+background = '#313332'
+text_colour = 'white'
+
+
+# In[ ]:
+
+
+
+
+
+# In[128]:
+
+
+#create a list of metrics
+metrics = ['Dribbles Successfully Defended%','PAdj Interceptions','Dribble%','Pass Forward%','Crossing%','Pressures']
+
+
+# In[129]:
+
+
+fig,axes = plt.subplots(3,2,figsize=(14,10))
+fig.set_facecolor(background)
+ax.patch.set_facecolor(background)
+
+mpl.rcParams['xtick.color']= text_colour
+mpl.rcParams['ytick.color']= text_colour
+
+counter = 0
+counter2 = 0
+met_counter = 0
+
+green_patch = mpatches.Patch(color='green', label='Josef Yarney')
+blue_patch = mpatches.Patch(color='blue', label='National League Defenders')
+plt.legend(handles=[green_patch, blue_patch], bbox_to_anchor=(1.02,3), loc='lower left', borderaxespad=0.) 
+
+
+
+
+#create initial for loop
+for i,ax in zip(df['Name'],axes.flatten()):
+    ax.set_facecolor(background)
+    
+    spines = ['top','bottom','left','right']
+    for x in spines:
+        if x in spines:
+            ax.spines[x].set_visible(False)
+            
+            
+    sns.swarmplot(x=metrics[met_counter],data=df,ax=axes[counter,counter2],zorder=1)
+    ax.set_xlabel(f'{metrics[met_counter]}',c=text_colour)
+    
+    
+    for x in range(len(df['Name'])):
+        if df['Name'][x] == 'Josef Yarney':
+            ax.scatter(x=df[metrics[met_counter]][x],y=0,s=200,c='green',zorder=2)
+            
+             
+            
+
+    met_counter+=1
+    if counter2 == 0:
+        counter2 = 1
+        continue
+    if counter2 == 1: 
+        counter2 = 0
+        counter+=1
+
+
+
+  
+
+
+# In[86]:
+
+
+df.Name.unique()
+
+
+# In[ ]:
+
+
+
+
