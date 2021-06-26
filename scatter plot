@@ -1,0 +1,27 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+df = pd.read_csv('/Users/new/Desktop/python datasets/player-stats (2).csv')
+
+df.head()
+
+fig,ax=plt.subplots()
+fig.set_size_inches(18,10)
+ax = sns.scatterplot(x='Pass Length', y='Successful Pass Length', data=df, hue='Team')
+fontsize = 9
+plt.legend(bbox_to_anchor=(1.02,1), loc='upper left', borderaxespad=0,fontsize=fontsize)
+
+
+
+def label_point(x, y, val, ax):
+    a = pd.concat({'x': x, 'y': y, 'val': val}, axis=1)
+    for i, point in a.iterrows():
+        ax.text(point['x']+.05, point['y'], str(point['val']))
+
+
+label_point(df['Pass Length'], df['Successful Pass Length'], df['Name'], plt.gca()) 
+
+plt.show()
+
+df.columns.values
