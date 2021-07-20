@@ -1,0 +1,41 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from mplsoccer.pitch import Pitch
+
+df = pd.read_csv('/Users/new/Desktop/events (1).csv')
+df.head()
+
+fig,ax=plt.subplots()
+fig.set_size_inches(18,10)
+
+
+
+pitch = Pitch(pitch_type='opta', orientation='horizontal', 
+              pitch_color='white', line_color='black',figsize=(13,8), 
+              constrained_layout=True, tight_layout=False)
+
+pitch.draw(ax=ax)
+
+x=df['X']
+y=df['Y']
+z=[x,y]
+
+for z in range (len(df['Event'])):
+    if df['Event'][z]=='succ inswing':
+        ax.scatter(x=df['X'][z],y=df['Y'][z],s=80, c='green', marker='d', zorder=2)
+        
+    if df['Event'][z]=='succ outswing':
+        ax.scatter(x=df['X'][z],y=df['Y'][z],s=80, c='green', marker='o', zorder=2)
+        
+    if df['Event'][z]=='unsucc outswing':
+        ax.scatter(x=df['X'][z],y=df['Y'][z],s=80, c='green', marker='o', zorder=2)
+        
+    if df['Event'][z]=='unsucc inswing':
+        ax.scatter(x=df['X'][z],y=df['Y'][z],s=80, c='red', marker='d', zorder=2)
+        
+    if df['Event'][z]=='short':
+        ax.scatter(x=df['X'][z],y=df['Y'][z],s=80, c='green', marker='x', zorder=2)  
+        
+plt.gca().invert_yaxis()
+
