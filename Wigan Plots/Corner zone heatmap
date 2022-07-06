@@ -1,0 +1,165 @@
+#%%
+import pandas as pd
+from mplsoccer import VerticalPitch, add_image, FontManager
+from matplotlib.colors import to_rgba
+import numpy as np
+from mplsoccer.statsbomb import read_event, EVENT_SLUG
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib import colorbar
+import matplotlib.patheffects as path_effects
+import matplotlib.image as mpimg
+from matplotlib.colors import LinearSegmentedColormap
+from scipy.ndimage import gaussian_filter
+from highlight_text import ax_text, fig_text
+from matplotlib import patches
+from matplotlib.patches import FancyArrowPatch
+from PIL import Image
+from urllib.request import urlopen
+import matplotlib.font_manager as font_manager
+from statsbombpy import sb
+import seaborn as sns
+
+ 
+textc='#1d1d1d'
+linec='#808080'
+font="Copperplate"
+bgcolor="white"#'#f1faee'
+color1='#e21017' #red
+color2='#9a9a9a' #grey
+color3='#457b9d'
+color4='#B2B3A9'
+color5='#1d3557'
+color6="#006daa"
+pathcolor="#C4D5CB"
+arrowedge=bgcolor
+
+ 
+team="Wigan Athletic"
+
+
+ 
+cmaplist = [bgcolor,color2,color1]
+cmap = LinearSegmentedColormap.from_list("", cmaplist)
+
+ 
+path_eff = [path_effects.Stroke(linewidth=2, foreground=color2),
+path_effects.Normal()]
+
+ 
+plt.rcParams.update({'font.family': font})
+
+
+ 
+df = sb.competition_events(
+    country="England",
+    division= "League One",
+    season="2021/2022",
+    split=False,
+    creds = {'user':'j.walmsley@wiganathletic.com','passwd':'pGgHfgIK'}
+)
+#%%
+df = df.loc[(df['pass_type']=='Corner')]
+df = df.loc[(df['team']==team)]
+
+ 
+df['x'] = df['location'].str[0]
+df['y'] = df['location'].str[1]
+df['z'] = df['location'].str[2]
+
+ 
+df['pass_end_x'] = df['pass_end_location'].str[0]
+df['pass_end_y'] = df['pass_end_location'].str[1]
+
+ 
+
+
+conditions=[(abs(df['y']-df['pass_end_y'])) > 43 ]
+values=[1]
+df['backpost']=np.select(conditions, values)
+
+ 
+conditions=[(abs(df['y']-df['pass_end_y'])) < 37 ]
+values=[1]
+df['frontpost']=np.select(conditions, values)
+
+ 
+conditions=[((abs(df['y']-df['pass_end_y'])) >= 37 ) & ((abs(df['y']-df['pass_end_y'])) <= 43 )]
+values=[1]
+df['penspot']=np.select(conditions, values)
+
+ 
+left=df.loc[(df['y']<=40) & (df['x']>=60)]
+right=df.loc[(df['y']>=40) & (df['x']>=60)]
+
+ 
+pitch = VerticalPitch(half=True,pitch_type='statsbomb',
+pitch_color=bgcolor, line_color=linec,line_zorder=5,pad_top=10)
+
+ 
+#%%
+def plot_corners(data,axa):
+ 
+ bin_statistic = pitch.bin_statistic(data.pass_end_x, data.pass_end_y, statistic='count', bins=(15, 8), normalize=True)
+ bin_statistic['statistic'] = gaussian_filter(bin_statistic['statistic'], 1)
+ labels = pitch.label_heatmap(bin_statistic, color=bgcolor, fontsize=22,
+                             ax=axa, ha='center', va='center',
+                             str_format='{:.2%}', path_effects=path_eff, zorder=6)
+ pcm = pitch.heatmap(bin_statistic, ax=axa, cmap='Blues', edgecolors=bgcolor)
+ 
+ 
+
+ 
+#%%
+fig = plt.figure(figsize=(25,18),constrained_layout=True)
+gs = fig.add_gridspec(nrows=1,ncols=2)
+fig.patch.set_facecolor(bgcolor)
+
+ 
+ax1 = fig.add_subplot(gs[0])
+ax1.set_title(label=f"Corners from left",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax1)
+
+plot_corners(left,ax1)
+
+ 
+ax2 = fig.add_subplot(gs[1])
+ax2.set_title(label=f"Corners from right",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax2)
+
+plot_corners(right,ax2)
+
+
+
+#TO CHECK NUMBERS ARE RIGHT
+
+def plot_corners(data,axa):
+ 
+ bin_statistic = pitch.bin_statistic(data.pass_end_x, data.pass_end_y, statistic='count', bins=(17, 6))
+ bin_statistic['statistic'] = gaussian_filter(bin_statistic['statistic'], 1)
+ labels = pitch.label_heatmap(bin_statistic, color=bgcolor, fontsize=22,
+                             ax=axa, ha='center', va='center',
+                             str_format='{:.2f}', path_effects=path_eff, zorder=6)
+ pcm = pitch.heatmap(bin_statistic, ax=axa, cmap='Blues', edgecolors=bgcolor)
+ 
+ 
+
+ 
+#%%
+fig = plt.figure(figsize=(25,18),constrained_layout=True)
+gs = fig.add_gridspec(nrows=1,ncols=2)
+fig.patch.set_facecolor(bgcolor)
+
+ 
+ax1 = fig.add_subplot(gs[0])
+ax1.set_title(label=f"Corners from left",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax1)
+
+plot_corners(left,ax1)
+
+ 
+ax2 = fig.add_subplot(gs[1])
+ax2.set_title(label=f"Corners from right",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax2)
+
+plot_corners(right,ax2)
