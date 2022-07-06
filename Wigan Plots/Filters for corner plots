@@ -1,0 +1,6 @@
+df = df.loc[(df['pass_outcome']!='Incomplete')]
+df = df.loc[(df['pass_outcome']!='Out')]
+df = df.loc[(df['pass_outcome']!='Unknown')]
+df = df.loc[(df['pass_body_part']=='Right Foot')]
+df = df.loc[(df['shot_assist']=='TRUE')]
+df = df.loc[(df['goal_assist']=='TRUE')]
