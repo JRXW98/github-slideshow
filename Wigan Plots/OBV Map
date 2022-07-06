@@ -1,0 +1,88 @@
+from scipy.stats import binned_statistic_2d
+import numpy as np
+from mplsoccer.pitch import Pitch
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import AxesGrid
+from statsbombpy import sb
+
+events = sb.competition_events(
+    country="England",
+    division="League One",
+    season="2021/2022",
+    split=False,
+    creds = {'user':'j.walmsley@wiganathletic.com','passwd':'pGgHfgIK'}
+)
+
+def league_obv_heatmaps(
+    x,
+    y,
+    values,
+    teams,
+    title,
+    x_bins=np.linspace(0, 120, 7),
+    y_bins=np.linspace(0, 80, 5),
+):
+    x, y, values, teams = (
+        np.asarray(x),
+        np.asarray(y),
+        np.asarray(values),
+        np.asarray(teams),
+    )
+    unique_teams = np.unique(teams)
+    n_teams = unique_teams.size
+    n_x_bins, n_y_bins = x_bins.size - 1, y_bins.size - 1
+
+    n_plot_cols = 5
+    n_plot_rows = int(np.ceil(n_teams / n_plot_cols))
+
+    binned_values = np.empty((n_teams, n_x_bins, n_y_bins))
+    for idx, team in enumerate(unique_teams):
+        binned_values[idx] = binned_statistic_2d(
+            x[teams == team],
+            y[teams == team],
+            values[teams == team],
+            statistic="sum",
+            bins=[x_bins, y_bins],
+        ).statistic
+    league_average = np.mean(binned_values, axis=0)
+    binned_values = binned_values - league_average
+
+    fig = plt.figure(figsize=(6 * n_plot_cols, 4 * n_plot_rows))
+
+    grid = AxesGrid(
+        fig,
+        111,
+        nrows_ncols=(n_plot_rows, n_plot_cols),
+        axes_pad=0.2,
+        cbar_mode="single",
+        cbar_location="right",
+        cbar_pad=0.1,
+    )
+
+    for idx, ax in enumerate(grid):
+        if idx < n_teams:
+            pitch = Pitch(line_zorder=10000)
+            pitch.draw(ax)
+            im = ax.imshow(
+                binned_values[idx].T,
+                vmin=-np.max(np.abs(binned_values)),
+                vmax=np.max(np.abs(binned_values)),
+                extent=(0, 120, 80, 0),
+                cmap="bwr",
+            )
+            ax.set_title(str(unique_teams[idx]), pad=0.05, fontsize=11)
+            ax.cax = grid.cbar_axes[0]
+        else:
+            ax.remove()
+    ax.cax.colorbar(im)
+    grid.cbar_axes[0].colorbar(im)
+    fig.suptitle(title, fontsize=16)
+
+events = events[events["type"].isin(["Pass", "Carry"])]
+
+events["x"] = events["location"].apply(lambda x: x[0])
+events["y"] = events["location"].apply(lambda x: x[1])
+events["obv_for_net"] = events["obv_for_net"].astype(float)
+X = events[["x", "y", "obv_for_net", "team"]].dropna()
+
+league_obv_heatmaps(X["x"], X["y"], X["obv_for_net"], X["team"], "OBV For vs league avg")
