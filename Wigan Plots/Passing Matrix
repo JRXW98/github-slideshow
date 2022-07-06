@@ -1,0 +1,44 @@
+import pandas as pd
+from mplsoccer import VerticalPitch, add_image, FontManager
+from matplotlib.colors import to_rgba
+import numpy as np
+from mplsoccer.statsbomb import read_event, EVENT_SLUG
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib import colorbar
+import matplotlib.patheffects as path_effects
+import matplotlib.image as mpimg
+from matplotlib.colors import LinearSegmentedColormap
+from scipy.ndimage import gaussian_filter
+from highlight_text import ax_text, fig_text
+from matplotlib import patches
+from matplotlib.patches import FancyArrowPatch
+from PIL import Image
+from urllib.request import urlopen
+import matplotlib.font_manager as font_manager
+from statsbombpy import sb
+import seaborn as sns
+
+
+
+df = sb.events(
+    match_id=3801974,
+    creds = {'user':'j.walmsley@wiganathletic.com','passwd':'pGgHfgIK'}
+)
+
+team = 'Wigan Athletic'
+df = df.loc[(df['team']==team)]
+
+
+df.head()
+
+
+df.columns
+
+
+df = df.groupby(['player','pass_recipient']).size().unstack(fill_value=0)
+print(df)
+
+df.head(10)
+
+df.to_csv(r'/Users/wiganathletic/Desktop/INSERT NAME.csv')
