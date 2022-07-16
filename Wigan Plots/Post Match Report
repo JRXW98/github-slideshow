@@ -1,0 +1,299 @@
+import pandas as pd
+from mplsoccer import VerticalPitch, add_image, FontManager
+from matplotlib.colors import to_rgba
+import numpy as np
+from mplsoccer.statsbomb import read_event, EVENT_SLUG
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib import colorbar
+import matplotlib.patheffects as path_effects
+import matplotlib.image as mpimg
+from matplotlib.colors import LinearSegmentedColormap
+from scipy.ndimage import gaussian_filter
+from highlight_text import ax_text, fig_text
+from matplotlib import patches
+from matplotlib.patches import FancyArrowPatch
+from PIL import Image
+from urllib.request import urlopen
+import matplotlib.font_manager as font_manager
+from statsbombpy import sb
+import seaborn as sns
+
+ 
+textc='#1d1d1d'
+linec='#808080'
+font="Copperplate"
+bgcolor="white"#'#f1faee'
+color1='#e21017' #red
+color2='#9a9a9a' #grey
+color3='#457b9d'
+color4='#B2B3A9'
+color5='#1d3557'
+color6="#006daa"
+pathcolor="#C4D5CB"
+arrowedge=bgcolor
+
+ 
+team="Preston North End"
+
+
+ 
+cmaplist = [bgcolor,color2,color1]
+cmap = LinearSegmentedColormap.from_list("", cmaplist)
+
+ 
+path_eff = [path_effects.Stroke(linewidth=2, foreground=color2),
+path_effects.Normal()]
+
+ 
+plt.rcParams.update({'font.family': font})
+
+
+ 
+df = sb.competition_events(
+    country="England",
+    division= "Championship",
+    season="2021/2022",
+    split=False,
+    creds = {'user':'j.walmsley@wiganathletic.com','passwd':'pGgHfgIK'}
+)
+
+df['x'] = df['location'].str[0]
+df['y'] = df['location'].str[1]
+df['z'] = df['location'].str[2]
+
+df['pass_end_x'] = df['pass_end_location'].str[0]
+df['pass_end_y'] = df['pass_end_location'].str[1]
+
+df['eventstartlocation_x'] = df['location'].str[0]
+df['eventstartlocation_y'] = df['location'].str[1]
+
+df = df.loc[(df['team']==team)]
+
+df2 = df.copy()
+df3 = df.copy()
+df4 = df.copy()
+
+#CORNER CONTACTS
+
+df2 = df2.loc[(df2['pass_type']=='Corner')]
+conditions=[(abs(df2['y']-df2['pass_end_y'])) > 43 ]
+values=[1]
+df2['backpost']=np.select(conditions, values)
+
+ 
+conditions=[(abs(df2['y']-df2['pass_end_y'])) < 37 ]
+values=[1]
+df2['frontpost']=np.select(conditions, values)
+
+ 
+conditions=[((abs(df2['y']-df2['pass_end_y'])) >= 37 ) & ((abs(df2['y']-df2['pass_end_y'])) <= 43 )]
+values=[1]
+df2['penspot']=np.select(conditions, values)
+
+ 
+left=df2.loc[(df2['y']<=40) & (df2['x']>=60)]
+right=df2.loc[(df2['y']>=40) & (df2['x']>=60)]
+
+ 
+pitch = VerticalPitch(half=True,pitch_type='statsbomb',
+pitch_color=bgcolor, line_color='black',line_zorder=5,pad_top=10,linewidth=3)
+
+ 
+#%%
+def plot_corners(df2,axa):
+ 
+ bin_statistic = pitch.bin_statistic(df2.pass_end_x, df2.pass_end_y, statistic='count', bins=(15, 8), normalize=True)
+ bin_statistic['statistic'] = gaussian_filter(bin_statistic['statistic'], 1)
+ labels = pitch.label_heatmap(bin_statistic, color=bgcolor, fontsize=22,
+                             ax=axa, ha='center', va='center',
+                             str_format='{:.2%}', path_effects=path_eff, zorder=6)
+ pcm = pitch.heatmap(bin_statistic, ax=axa, cmap='Blues', edgecolors=bgcolor)
+ 
+ 
+
+ 
+#%%
+fig = plt.figure(figsize=(25,18),constrained_layout=True)
+gs = fig.add_gridspec(nrows=1,ncols=2)
+fig.patch.set_facecolor(bgcolor)
+
+ 
+ax1 = fig.add_subplot(gs[0])
+ax1.set_title(label=f"Corners from left",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax1)
+
+plot_corners(left,ax1)
+
+ 
+ax2 = fig.add_subplot(gs[1])
+ax2.set_title(label=f"Corners from right",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax2)
+
+plot_corners(right,ax2)
+
+
+#SHOTS
+df3 = df3.loc[(df3['type']=='Shot')]
+
+pitch = VerticalPitch(half=True,pitch_type='statsbomb',
+pitch_color=bgcolor, line_color='black',line_zorder=5,pad_top=10,linewidth=3)
+
+def plot_shots(df3,axa):
+ 
+ bin_statistic = pitch.bin_statistic(df3.eventstartlocation_x, df3.eventstartlocation_y, statistic='count', bins=(30, 30))
+ bin_statistic['statistic'] = gaussian_filter(bin_statistic['statistic'], 1)
+ 
+ pcm = pitch.heatmap(bin_statistic, ax=axa, cmap='Blues', edgecolors=bgcolor)
+ 
+ 
+
+ 
+#%%
+fig = plt.figure(figsize=(25,18),constrained_layout=True)
+gs = fig.add_gridspec(nrows=1,ncols=1)
+fig.patch.set_facecolor(bgcolor)
+
+ 
+ax1 = fig.add_subplot(gs[0])
+ax1.set_title(label=f"Shots",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax1)
+
+plot_shots(df3,ax1)
+
+
+#KEY PASSES
+df4 = df4.loc[(df4['pass_type']!='Corner')]
+
+
+#DROPPING ROWS
+df4 = df4.dropna( how='all',
+                  subset=['pass_goal_assist', 'pass_shot_assist'])
+
+
+
+#PITCH TYPE
+pitch = VerticalPitch(half=True,pitch_type='statsbomb',
+pitch_color=bgcolor, line_color='black',line_zorder=5,pad_top=10,linewidth=3) 
+
+#PLOT THE GRAPH
+def plot_keypass(df4,axa):
+ 
+ bin_statistic = pitch.bin_statistic(df4.eventstartlocation_x, df4.eventstartlocation_y, statistic='count', bins=(30, 30))
+ bin_statistic['statistic'] = gaussian_filter(bin_statistic['statistic'], 1)
+ pcm = pitch.heatmap(bin_statistic, ax=axa, cmap='Blues', edgecolors=bgcolor)
+  
+#%%
+fig = plt.figure(figsize=(25,18),constrained_layout=True)
+gs = fig.add_gridspec(nrows=1,ncols=1)
+fig.patch.set_facecolor(bgcolor)
+
+ 
+ax1 = fig.add_subplot(gs[0])
+ax1.set_title(label=f"Key Passes",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax1)
+
+plot_keypass(df4,ax1)
+
+
+#Successful corners
+
+df5 = df.copy()
+
+df5 = df5.loc[(df5['team']==team)]
+df5 = df5.loc[(df5['pass_type']=='Corner')]
+df5 = df5.loc[(df5['pass_outcome']!='Incomplete')]
+df5 = df5.loc[(df5['pass_outcome']!='Out')]
+df5 = df5.loc[(df5['pass_outcome']!='Unknown')]
+
+
+conditions=[(abs(df5['y']-df5['pass_end_y'])) > 43 ]
+values=[1]
+df5['backpost']=np.select(conditions, values)
+
+ 
+conditions=[(abs(df5['y']-df5['pass_end_y'])) < 37 ]
+values=[1]
+df5['frontpost']=np.select(conditions, values)
+
+ 
+conditions=[((abs(df5['y']-df5['pass_end_y'])) >= 37 ) & ((abs(df5['y']-df5['pass_end_y'])) <= 43 )]
+values=[1]
+df5['penspot']=np.select(conditions, values)
+
+ 
+left=df5.loc[(df5['y']<=40) & (df5['x']>=60)]
+right=df5.loc[(df5['y']>=40) & (df5['x']>=60)]
+
+ 
+pitch = VerticalPitch(half=True,pitch_type='statsbomb',
+pitch_color=bgcolor, line_color='black',line_zorder=5,pad_top=10,linewidth=3)
+
+ 
+#%%
+def plot_corners(df5,axa):
+ 
+ bin_statistic = pitch.bin_statistic(df5.pass_end_x, df5.pass_end_y, statistic='count', bins=(15, 8), normalize=True)
+ bin_statistic['statistic'] = gaussian_filter(bin_statistic['statistic'], 1)
+ labels = pitch.label_heatmap(bin_statistic, color=bgcolor, fontsize=22,
+                             ax=axa, ha='center', va='center',
+                             str_format='{:.2%}', path_effects=path_eff, zorder=6)
+ pcm = pitch.heatmap(bin_statistic, ax=axa, cmap='Blues', edgecolors=bgcolor)
+ 
+ 
+
+ 
+#%%
+fig = plt.figure(figsize=(25,18),constrained_layout=True)
+gs = fig.add_gridspec(nrows=1,ncols=2)
+fig.patch.set_facecolor(bgcolor)
+
+ 
+ax1 = fig.add_subplot(gs[0])
+ax1.set_title(label=f"Corners from left",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax1)
+
+plot_corners(left,ax1)
+
+ 
+ax2 = fig.add_subplot(gs[1])
+ax2.set_title(label=f"Corners from right",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax2)
+
+plot_corners(right,ax2)
+
+
+#GOALS
+
+df6 = df.copy()
+
+df6 = df6.loc[(df6['type']=='Shot')]
+df6 = df6.loc[(df6['shot_outcome']=='Goal')]
+
+pitch = VerticalPitch(half=True,pitch_type='statsbomb',
+pitch_color=bgcolor, line_color='black',line_zorder=5,pad_top=10,linewidth=3)
+
+def plot_shots(df6,axa):
+ 
+ bin_statistic = pitch.bin_statistic(df6.eventstartlocation_x, df6.eventstartlocation_y, statistic='count', bins=(30, 30))
+ bin_statistic['statistic'] = gaussian_filter(bin_statistic['statistic'], 1)
+ 
+ pcm = pitch.heatmap(bin_statistic, ax=axa, cmap='Blues', edgecolors=bgcolor)
+ 
+ 
+
+ 
+#%%
+fig = plt.figure(figsize=(25,18),constrained_layout=True)
+gs = fig.add_gridspec(nrows=1,ncols=1)
+fig.patch.set_facecolor(bgcolor)
+
+ 
+ax1 = fig.add_subplot(gs[0])
+ax1.set_title(label=f"Goals",x=0.5,y=1.04,size=30,color=textc,ha='center',fontweight='bold')
+pitch.draw(ax=ax1)
+
+plot_shots(df6,ax1)
+
+
+df.to_csv(r'/Users/wiganathletic/Desktop/df.csv')
