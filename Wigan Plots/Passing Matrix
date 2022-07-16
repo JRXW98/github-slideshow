@@ -23,7 +23,7 @@ import seaborn as sns
 
 df = sb.events(
     match_id=3801974,
-    creds = {'user':'j.walmsley@wiganathletic.com','passwd':'pGgHfgIK'}
+    creds = {'user':'email','passwd':'password'}
 )
 
 team = 'Wigan Athletic'
