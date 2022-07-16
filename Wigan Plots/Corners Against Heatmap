@@ -55,17 +55,17 @@ df = sb.competition_events(
     division= "League One",
     season="2021/2022",
     split=False,
-    creds = {'user':'j.walmsley@wiganathletic.com','passwd':'pGgHfgIK'}
+    creds = {'user':'email','passwd':'password'}
 )
 
 comps = sb.competitions(
-       creds = {'user':'j.walmsley@wiganathletic.com','passwd':'pGgHfgIK'}
+       creds = {'user':'email','passwd':'password'}
 )
 
 matches = sb.matches(
          competition_id=4, 
          season_id=108,
-         creds = {'user':'j.walmsley@wiganathletic.com','passwd':'pGgHfgIK'}
+         creds = {'user':'email','passwd':'password'}
 )
 
 
