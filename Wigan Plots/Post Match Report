@@ -55,7 +55,7 @@ df = sb.competition_events(
     division= "Championship",
     season="2021/2022",
     split=False,
-    creds = {'user':'j.walmsley@wiganathletic.com','passwd':'pGgHfgIK'}
+    creds = {'user':'email','passwd':'password'}
 )
 
 df['x'] = df['location'].str[0]
