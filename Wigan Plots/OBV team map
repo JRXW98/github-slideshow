@@ -10,7 +10,7 @@ events = sb.competition_events(
     division="League One",
     season="2021/2022",
     split=False,
-    creds = {'user':'j.walmsley@wiganathletic.com','passwd':'pGgHfgIK'}
+    creds = {'user':'email','passwd':'password'}
 )
 
 def obv_for_net_heatmap(
